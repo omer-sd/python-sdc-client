@@ -560,6 +560,41 @@ class _SdcCommon(object):
             return [False, self.lasterr]
         return [True, res.json()]
 
+    def create_user(self, user_email, password, customer_id=1):
+        '''**Description**
+            Cretes a new user without email invite/accept flow. This requires specifying an initial password for the user as well as a customer ID number, which will be 1 for typical On-Premises installs.
+
+        **Arguments**
+            - **user_email**: the email address of the user that will be created
+            - **password**: the initial password for the newly-created user
+            - **customer_id**: `customer number <https://support.sysdig.com/hc/en-us/articles/115005848823-Your-Customer-Number>` where user should be created
+
+        **Success Return Value**
+            The newly created user.
+
+        **Example**
+            `examples/user_team_mgmt.py <https://github.com/draios/python-sdc-client/blob/master/examples/user_team_mgmt.py>`_
+        '''
+        # Look up the list of users to see if this exists, do not create if one exists
+        res = requests.get(self.url + '/api/users', headers=self.hdrs, verify=self.ssl_verify)
+        if not self._checkResponse(res):
+            return [False, self.lasterr]
+        data = res.json()
+        for user in data['users']:
+            if user['username'] == user_email:
+                return [False, 'user ' + user_email + ' already exists']
+
+        # Create the user
+        user_json = {
+                        'username': user_email,
+                        'password': password,
+                        'customer': customer_id
+                    }
+        res = requests.post(self.url + '/api/users', headers=self.hdrs, data=json.dumps(user_json), verify=self.ssl_verify)
+        if not self._checkResponse(res):
+            return [False, self.lasterr]
+        return [True, res.json()]
+
     def delete_user(self, user_email):
         '''**Description**
             Deletes a user from Sysdig Monitor.
