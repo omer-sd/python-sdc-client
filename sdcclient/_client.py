@@ -2033,6 +2033,41 @@ class SdSecureClient(_SdcCommon):
         '''
         return self._get_policy_events_int(ctx)
 
+    def get_baselines(self):
+        '''**Description**
+            Fetch all baselines (summary of expected program behavior) constructed by Sysdig for this account.
+
+        **Arguments**
+            - None
+
+        **Success Return Value**
+            JSON containing details on all baselines created for this account.
+
+        **Example**
+            `examples/get_baselines.py <https://github.com/draios/python-sdc-client/blob/master/examples/get_baselines.py>`_
+
+        '''
+        res = requests.get(self.url + '/api/baselineGroups', headers=self.hdrs, verify=self.ssl_verify)
+        if not self._checkResponse(res):
+            return [False, self.lasterr]
+
+        gid = res.json()['baselineGroups'][0]['id']
+
+        res = requests.get(self.url + '/api/baselineGroups/{}/baselineSummaries'.format(gid), headers=self.hdrs, verify=self.ssl_verify)
+        if not self._checkResponse(res):
+            return [False, self.lasterr]
+
+        bls = []
+        for summ in res.json()['baselineSummaries']:
+            bid = summ['id']
+
+            bres = requests.get(self.url + '/api/baselines/{}'.format(bid), headers=self.hdrs, verify=self.ssl_verify)
+            if not self._checkResponse(res):
+                return [False, self.lasterr]
+            bls.append(bres.json())
+
+        return [True, bls]
+
     def create_default_policies(self):
         '''**Description**
             Create a set of default policies using the current system falco rules file as a reference. For every falco rule in the system
