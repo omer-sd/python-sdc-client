@@ -2064,7 +2064,7 @@ class SdSecureClient(_SdcCommon):
             bres = requests.get(self.url + '/api/baselines/{}'.format(bid), headers=self.hdrs, verify=self.ssl_verify)
             if not self._checkResponse(res):
                 return [False, self.lasterr]
-            bls.append(bres.json())
+            bls.append(bres.json()['baseline'])
 
         return [True, bls]
 
